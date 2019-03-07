@@ -92,6 +92,24 @@ def character_screen(player, character_screen_width, character_screen_height, sc
     y = screen_height // 2 - character_screen_height // 2
     libtcod.console_blit(window, 0, 0, character_screen_width, character_screen_height, 0, x, y, 1.0, 0.7)
 
+def detail_screen(target, character_screen_width, character_screen_height, screen_width, screen_height):
+    window = libtcod.console_new(character_screen_width, character_screen_height)
+
+    libtcod.console_set_default_foreground(window, libtcod.white)
+
+    libtcod.console_print_rect_ex(window, 0, 1, character_screen_width, character_screen_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'This is {0}'.format(target.name))
+    libtcod.console_print_rect_ex(window, 0, 2, character_screen_width, character_screen_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'Their eyes are {0}'.format(target.details.eyes.colour_name))
+    libtcod.console_print_rect_ex(window, 0, 3, character_screen_width, character_screen_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'Their skin is {0}'.format(target.details.skin.colour_name))
+    libtcod.console_print_rect_ex(window, 0, 4, character_screen_width, character_screen_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'Their hair is: {0}'.format(target.details.hair.colour_name))
+
+    x = screen_width // 2 - character_screen_width // 2
+    y = screen_height // 2 - character_screen_height // 2
+    libtcod.console_blit(window, 0, 0, character_screen_width, character_screen_height, 0, x, y, 1.0, 0.7)
+
 
 def message_box(con, header, width, screen_width, screen_height):
     menu(con, header, [], width, screen_width, screen_height)

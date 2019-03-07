@@ -3,11 +3,11 @@ import tcod as libtcod
 import textwrap
 
 
+
 class Message:
     def __init__(self, text, color=libtcod.white):
         self.text = text
         self.color = color
-
 
 class MessageLog:
     def __init__(self, x, width, height):

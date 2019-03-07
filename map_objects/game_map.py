@@ -1,6 +1,5 @@
 import tcod as libtcod
-from random import randint
-
+from random import *
 from components.ai import BasicMonster
 from components.equipment import EquipmentSlots
 from components.equippable import Equippable
@@ -8,7 +7,7 @@ from components.fighter import Fighter
 from components.item import Item
 from components.stairs import Stairs
 
-from entity import Entity
+from entity import Entity, Details
 
 from game_messages import Message
 
@@ -20,6 +19,10 @@ from map_objects.tile import Tile
 from random_utils import from_dungeon_level, random_choice_from_dict
 
 from render_functions import RenderOrder
+from names import names
+from details import *
+from genetics import Genetics
+from species import *
 
 
 class GameMap:
@@ -34,6 +37,22 @@ class GameMap:
         tiles = [[Tile(True) for y in range(self.height)] for x in range(self.width)]
 
         return tiles
+
+    def make_npc(self,entities,x,y):
+
+        fighter_component = Fighter(hp=20, defense=0, power=4, xp=35)
+        ai_component = BasicMonster()
+        human_eye_colours = [black,blue]
+        human_hair_colours = [black_hair,blonde]
+        details = Genetics(eye_colour_1=choice(human_eye_colours),eye_colour_2=choice(human_eye_colours),hair_colour_1=choice(human_hair_colours),hair_colour_2=choice(human_hair_colours))
+
+        monster = Entity(x, y, '@', details.eye_colour_1.eye_colour, choice(names), blocks=True,
+                         render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,genetics=details)
+
+        entities.append(monster)
+
+        return entities
+
 
     def make_map(self, max_rooms, room_min_size, room_max_size, map_width, map_height, player, entities):
         rooms = []
@@ -53,6 +72,9 @@ class GameMap:
                         self.create_tile(tile_x, tile_y)
                         player.x = tile_x
                         player.y = tile_y
+                    elif tile_character == 'N':
+                        self.create_tile(tile_x, tile_y)
+                        self.make_npc(entities,tile_x,tile_y)
         else:
             for r in range(max_rooms):
             # random width and height
@@ -108,15 +130,25 @@ class GameMap:
                     rooms.append(new_room)
                     num_rooms += 1
 
+
         stairs_component = Stairs(self.dungeon_level + 1)
         down_stairs = Entity(center_of_last_room_x, center_of_last_room_y, '>', libtcod.white, 'Stairs',
                              render_order=RenderOrder.STAIRS, stairs=stairs_component)
-        entities.append(down_stairs)
+        if self.dungeon_level == 0:
+            stairs_component = Stairs(self.dungeon_level + 1)
+            village_stairs = Entity(player.x, player.y, '>', libtcod.white, 'Stairs',
+                                 render_order=RenderOrder.STAIRS, stairs=stairs_component)
+            entities.append(village_stairs)
+        else:
+            entities.append(down_stairs)
 
         upstairs_component = Stairs(self.dungeon_level - 1)
         up_stairs = Entity(player.x, player.y, '<', libtcod.white, 'Upstairs',
                              render_order=RenderOrder.STAIRS, upstairs=upstairs_component)
-        entities.append(up_stairs)
+        if self.dungeon_level == 0:
+            pass
+        else:
+            entities.append(up_stairs)
 
     def create_tile(self, x, y):
         # go for the x and y values in the tiles and make them passable
@@ -178,13 +210,13 @@ class GameMap:
                     ai_component = BasicMonster()
 
                     monster = Entity(x, y, 'o', libtcod.desaturated_green, 'Orc', blocks=True,
-                                     render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component)
+                                     render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,species=orc,profession='Warrior ')
                 else:
                     fighter_component = Fighter(hp=30, defense=2, power=8, xp=100)
                     ai_component = BasicMonster()
 
                     monster = Entity(x, y, 'T', libtcod.darker_green, 'Troll', blocks=True, fighter=fighter_component,
-                                     render_order=RenderOrder.ACTOR, ai=ai_component)
+                                     render_order=RenderOrder.ACTOR, ai=ai_component,species=troll,profession='Warrior')
 
                 entities.append(monster)
 

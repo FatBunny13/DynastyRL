@@ -4,7 +4,7 @@ from enum import Enum
 
 from game_states import GameStates
 
-from menus import character_screen, inventory_menu, level_up_menu
+from menus import character_screen, inventory_menu, level_up_menu,detail_screen
 
 class RenderOrder(Enum):
     STAIRS = 1
@@ -18,10 +18,25 @@ def get_names_under_mouse(mouse, entities, fov_map):
 
     names = [entity.name for entity in entities
              if entity.x == x and entity.y == y and libtcod.map_is_in_fov(fov_map, entity.x, entity.y)]
-    names = ', '.join(names)
+    names = ' ,'.join(names)
+
 
     return names.capitalize()
 
+def show_details(mouse, entities, fov_map):
+    (x, y) = (mouse.cx, mouse.cy)
+
+    eyes = [entity.details.eyes for entity in entities
+             if entity.genetics and entity.genetics.eye_colour_1 and entity.x == x and entity.y == y and libtcod.map_is_in_fov(fov_map, entity.x, entity.y)]
+    hair = [entity.details.hair for entity in entities
+             if entity.genetics and entity.genetics.hair_colour_1 and entity.x == x and entity.y == y and libtcod.map_is_in_fov(fov_map, entity.x, entity.y)]
+    names = ' :'.join(hair)
+    eyes = 'Eyes , '.join(eyes)
+
+    names.join(eyes)
+
+
+    return names.capitalize()
 
 def render_bar(panel, x, y, total_width, name, value, maximum, bar_color, back_color):
     bar_width = int(float(value) / maximum * total_width)
@@ -84,8 +99,11 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
                              'Dungeon level: {0}'.format(game_map.dungeon_level))
 
     libtcod.console_set_default_foreground(panel, libtcod.light_gray)
-    libtcod.console_print_ex(panel, 1, 0, libtcod.BKGND_NONE, libtcod.LEFT,
+    libtcod.console_print_ex(panel, 5, 0, libtcod.BKGND_NONE, libtcod.LEFT,
                              get_names_under_mouse(mouse, entities, fov_map))
+
+    libtcod.console_print_ex(con, 5, 10, libtcod.BKGND_NONE, libtcod.LEFT,
+                             show_details(mouse, entities, fov_map))
 
     libtcod.console_blit(panel, 0, 0, screen_width, panel_height, 0, 0, panel_y)
 

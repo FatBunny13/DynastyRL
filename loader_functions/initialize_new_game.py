@@ -1,4 +1,4 @@
-import libtcodpy as libtcod
+import tcod as libtcod
 
 from components.equipment import Equipment
 from components.equippable import Equippable
@@ -6,7 +6,7 @@ from components.fighter import Fighter
 from components.inventory import Inventory
 from components.level import Level
 
-from entity import Entity
+from entity import Entity, Details
 
 from equipment_slots import EquipmentSlots
 
@@ -17,6 +17,9 @@ from game_states import GameStates
 from map_objects.game_map import GameMap
 
 from render_functions import RenderOrder
+
+from species import *
+
 
 
 def get_constants():
@@ -87,7 +90,7 @@ def get_game_variables(constants):
     equipment_component = Equipment()
     player = Entity(0, 0, '@', libtcod.white, 'Player', blocks=True, render_order=RenderOrder.ACTOR,
                     fighter=fighter_component, inventory=inventory_component, level=level_component,
-                    equipment=equipment_component)
+                    equipment=equipment_component,species=human,profession='Adventurer')
     entities = [player]
 
     equippable_component = Equippable(EquipmentSlots.MAIN_HAND, power_bonus=2)

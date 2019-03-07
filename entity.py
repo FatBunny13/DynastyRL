@@ -6,13 +6,20 @@ from components.item import Item
 
 from render_functions import RenderOrder
 
+class Details:
+
+    def __init__(self,hair=None,skin=None,eyes=None):
+        self.hair = hair
+        self.skin = skin
+        self.eyes = eyes
+
 
 class Entity:
     """
     A generic object to represent players, enemies, items, etc.
     """
     def __init__(self, x, y, char, color, name, blocks=False, render_order=RenderOrder.CORPSE, fighter=None, ai=None,
-                 item=None, inventory=None, stairs=None,upstairs=None, level=None, equipment=None, equippable=None):
+                 item=None, inventory=None, stairs=None,upstairs=None, level=None, equipment=None, equippable=None,intelligent=False,genetics=False,species=None,profession=''):
         self.x = x
         self.y = y
         self.char = char
@@ -29,6 +36,10 @@ class Entity:
         self.level = level
         self.equipment = equipment
         self.equippable = equippable
+        self.intelligent = intelligent
+        self.genetics = genetics
+        self.species = species
+        self.profession = profession
 
         if self.fighter:
             self.fighter.owner = self
