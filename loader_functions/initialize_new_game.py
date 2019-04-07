@@ -6,7 +6,7 @@ from components.fighter import Fighter
 from components.inventory import Inventory
 from components.level import Level
 
-from entity import Entity, Details
+from entity import Entity,Player
 
 from equipment_slots import EquipmentSlots
 
@@ -23,7 +23,7 @@ from species import *
 
 
 def get_constants():
-    window_title = 'Roguelike Tutorial Revised'
+    window_title = 'DynastyRL'
 
     screen_width = 80
     screen_height = 50
@@ -88,9 +88,11 @@ def get_game_variables(constants):
     inventory_component = Inventory(26)
     level_component = Level()
     equipment_component = Equipment()
+    player_component = Player(d_level=1)
+
     player = Entity(0, 0, '@', libtcod.white, 'Player', blocks=True, render_order=RenderOrder.ACTOR,
                     fighter=fighter_component, inventory=inventory_component, level=level_component,
-                    equipment=equipment_component,species=human,profession='Adventurer')
+                    equipment=equipment_component,species=human,profession='Adventurer',player=player_component)
     entities = [player]
 
     equippable_component = Equippable(EquipmentSlots.MAIN_HAND, power_bonus=2)

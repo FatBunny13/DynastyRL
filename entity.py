@@ -13,13 +13,19 @@ class Details:
         self.skin = skin
         self.eyes = eyes
 
+class Player:
+
+    def __init__(self,d_level):
+        self.d_level = d_level
+
 
 class Entity:
     """
     A generic object to represent players, enemies, items, etc.
     """
     def __init__(self, x, y, char, color, name, blocks=False, render_order=RenderOrder.CORPSE, fighter=None, ai=None,
-                 item=None, inventory=None, stairs=None,upstairs=None, level=None, equipment=None, equippable=None,intelligent=False,genetics=False,species=None,profession=''):
+                 item=None, inventory=None, stairs=None,upstairs=None, level=None, equipment=None, equippable=None,intelligent=False,genetics=False,species=None,profession='',
+                 player=None):
         self.x = x
         self.y = y
         self.char = char
@@ -40,6 +46,7 @@ class Entity:
         self.genetics = genetics
         self.species = species
         self.profession = profession
+        self.player = player
 
         if self.fighter:
             self.fighter.owner = self

@@ -1,4 +1,6 @@
 import tcod as libtcod
+import shelve
+import os
 from random import *
 from components.ai import BasicMonster
 from components.equipment import EquipmentSlots
@@ -23,6 +25,11 @@ from names import names
 from details import *
 from genetics import Genetics
 from species import *
+from loader_functions.data_loaders import load_level,save_level,load_entities
+
+class Level:
+    def __init__(self,d_level,):
+        self.d_level = d_level
 
 
 class GameMap:
@@ -32,6 +39,7 @@ class GameMap:
         self.tiles = self.initialize_tiles()
 
         self.dungeon_level = dungeon_level
+        self.levels = {}
 
     def initialize_tiles(self):
         tiles = [[Tile(True) for y in range(self.height)] for x in range(self.width)]
@@ -60,8 +68,11 @@ class GameMap:
 
         center_of_last_room_x = None
         center_of_last_room_y = None
+        # this should {hopefully} load a level from a .dat file
+        if os.path.isfile('level{0}{1}.dat'.format(player.name,self.dungeon_level)):
+            entities,self.tiles = load_level(player,self.dungeon_level)
 
-        if self.dungeon_level == 0:
+        elif self.dungeon_level == 0:
             p = open('village.txt')
             contents = p.read()
             for tile_y, line in enumerate(contents.split('\n')):
@@ -74,62 +85,62 @@ class GameMap:
                         player.y = tile_y
                     elif tile_character == 'N':
                         self.create_tile(tile_x, tile_y)
-                        self.make_npc(entities,tile_x,tile_y)
+                        self.make_npc(entities, tile_x, tile_y)
+            save_level(player, entities, self.tiles, self.dungeon_level)
         else:
             for r in range(max_rooms):
-            # random width and height
+                # random width and height
                 w = randint(room_min_size, room_max_size)
                 h = randint(room_min_size, room_max_size)
-            # random position without going out of the boundaries of the map
+                # random position without going out of the boundaries of the map
                 x = randint(0, map_width - w - 1)
                 y = randint(0, map_height - h - 1)
 
-            # "Rect" class makes rectangles easier to work with
+                # "Rect" class makes rectangles easier to work with
                 new_room = Rect(x, y, w, h)
 
-            # run through the other rooms and see if they intersect with this one
+                # run through the other rooms and see if they intersect with this one
                 for other_room in rooms:
                     if new_room.intersect(other_room):
                         break
                 else:
-                # this means there are no intersections, so this room is valid
+                    # this means there are no intersections, so this room is valid
 
-                # "paint" it to the map's tiles
+                    # "paint" it to the map's tiles
                     self.create_room(new_room)
 
-                # center coordinates of new room, will be useful later
+                    # center coordinates of new room, will be useful later
                     (new_x, new_y) = new_room.center()
 
                     center_of_last_room_x = new_x
                     center_of_last_room_y = new_y
 
                     if num_rooms == 0:
-                    # this is the first room, where the player starts at
+                        # this is the first room, where the player starts at
                         player.x = new_x
                         player.y = new_y
                     else:
-                    # all rooms after the first:
-                    # connect it to the previous room with a tunnel
+                        # all rooms after the first:
+                        # connect it to the previous room with a tunnel
 
-                    # center coordinates of previous room
+                        # center coordinates of previous room
                         (prev_x, prev_y) = rooms[num_rooms - 1].center()
 
-                    # flip a coin (random number that is either 0 or 1)
+                        # flip a coin (random number that is either 0 or 1)
                         if randint(0, 1) == 1:
-                        # first move horizontally, then vertically
+                            # first move horizontally, then vertically
                             self.create_h_tunnel(prev_x, new_x, prev_y)
                             self.create_v_tunnel(prev_y, new_y, new_x)
                         else:
-                        # first move vertically, then horizontally
+                            # first move vertically, then horizontally
                             self.create_v_tunnel(prev_y, new_y, prev_x)
                             self.create_h_tunnel(prev_x, new_x, new_y)
 
                     self.place_entities(new_room, entities)
 
-                # finally, append the new room to the list
+                    # finally, append the new room to the list
                     rooms.append(new_room)
                     num_rooms += 1
-
 
         stairs_component = Stairs(self.dungeon_level + 1)
         down_stairs = Entity(center_of_last_room_x, center_of_last_room_y, '>', libtcod.white, 'Stairs',
@@ -137,18 +148,21 @@ class GameMap:
         if self.dungeon_level == 0:
             stairs_component = Stairs(self.dungeon_level + 1)
             village_stairs = Entity(player.x, player.y, '>', libtcod.white, 'Stairs',
-                                 render_order=RenderOrder.STAIRS, stairs=stairs_component)
+                                    render_order=RenderOrder.STAIRS, stairs=stairs_component)
             entities.append(village_stairs)
         else:
             entities.append(down_stairs)
 
         upstairs_component = Stairs(self.dungeon_level - 1)
         up_stairs = Entity(player.x, player.y, '<', libtcod.white, 'Upstairs',
-                             render_order=RenderOrder.STAIRS, upstairs=upstairs_component)
+                           render_order=RenderOrder.STAIRS, upstairs=upstairs_component)
         if self.dungeon_level == 0:
             pass
         else:
             entities.append(up_stairs)
+
+        save_level(player,entities,self.tiles,self.dungeon_level)
+
 
     def create_tile(self, x, y):
         # go for the x and y values in the tiles and make them passable
@@ -208,14 +222,13 @@ class GameMap:
                 if monster_choice == 'orc':
                     fighter_component = Fighter(hp=20, defense=0, power=4, xp=35)
                     ai_component = BasicMonster()
-
-                    monster = Entity(x, y, 'o', libtcod.desaturated_green, 'Orc', blocks=True,
+                    monster = Entity(x, y, 'o', libtcod.desaturated_green, choice(names), blocks=True,
                                      render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,species=orc,profession='Warrior ')
                 else:
                     fighter_component = Fighter(hp=30, defense=2, power=8, xp=100)
                     ai_component = BasicMonster()
 
-                    monster = Entity(x, y, 'T', libtcod.darker_green, 'Troll', blocks=True, fighter=fighter_component,
+                    monster = Entity(x, y, 'T', libtcod.darker_green, choice(names), blocks=True, fighter=fighter_component,
                                      render_order=RenderOrder.ACTOR, ai=ai_component,species=troll,profession='Warrior')
 
                 entities.append(monster)
@@ -263,7 +276,11 @@ class GameMap:
 
     def next_floor(self, player, message_log, constants):
         self.dungeon_level += 1
-        entities = [player]
+        if os.path.isfile('level{0}{1}.dat'.format(player.name,self.dungeon_level)):
+            entities = load_entities(player, self.dungeon_level)
+            pass
+        else:
+            entities = [player]
 
         self.tiles = self.initialize_tiles()
         self.make_map(constants['max_rooms'], constants['room_min_size'], constants['room_max_size'],
@@ -277,7 +294,11 @@ class GameMap:
 
     def previous_floor(self, player, message_log, constants):
         self.dungeon_level -= 1
-        entities = [player]
+        if os.path.isfile('level{0}{1}.dat'.format(player.name, self.dungeon_level)):
+            entities = load_entities(player,self.dungeon_level)
+            pass
+        else:
+            entities = [player]
 
         self.tiles = self.initialize_tiles()
         self.make_map(constants['max_rooms'], constants['room_min_size'], constants['room_max_size'],
