@@ -25,7 +25,7 @@ from names import names
 from details import *
 from genetics import Genetics
 from species import *
-from loader_functions.data_loaders import load_level,save_level,load_entities
+from loader_functions.data_loaders import load_level,save_level,load_entities,save_entities
 
 class Level:
     def __init__(self,d_level,):
@@ -70,8 +70,14 @@ class GameMap:
         center_of_last_room_y = None
         # this should {hopefully} load a level from a .dat file
         if os.path.isfile('level{0}{1}.dat'.format(player.name,self.dungeon_level)):
-            entities,self.tiles = load_level(player,self.dungeon_level)
-
+            level_entities = load_entities(player,self.dungeon_level)
+            entities.extend(level_entities)
+            for entity in entities:
+                if entity == player:
+                    print('playerin')
+                    print(entity.x)
+                    print(entity.y)
+            self.tiles = load_level(player,self.dungeon_level)
         elif self.dungeon_level == 0:
             p = open('village.txt')
             contents = p.read()
@@ -86,7 +92,6 @@ class GameMap:
                     elif tile_character == 'N':
                         self.create_tile(tile_x, tile_y)
                         self.make_npc(entities, tile_x, tile_y)
-            save_level(player, entities, self.tiles, self.dungeon_level)
         else:
             for r in range(max_rooms):
                 # random width and height
@@ -161,7 +166,8 @@ class GameMap:
         else:
             entities.append(up_stairs)
 
-        save_level(player,entities,self.tiles,self.dungeon_level)
+        save_level(player,self.tiles,self.dungeon_level)
+        save_entities(player,entities,self.dungeon_level)
 
 
     def create_tile(self, x, y):
@@ -276,11 +282,7 @@ class GameMap:
 
     def next_floor(self, player, message_log, constants):
         self.dungeon_level += 1
-        if os.path.isfile('level{0}{1}.dat'.format(player.name,self.dungeon_level)):
-            entities = load_entities(player, self.dungeon_level)
-            pass
-        else:
-            entities = [player]
+        entities = [player]
 
         self.tiles = self.initialize_tiles()
         self.make_map(constants['max_rooms'], constants['room_min_size'], constants['room_max_size'],
@@ -294,11 +296,7 @@ class GameMap:
 
     def previous_floor(self, player, message_log, constants):
         self.dungeon_level -= 1
-        if os.path.isfile('level{0}{1}.dat'.format(player.name, self.dungeon_level)):
-            entities = load_entities(player,self.dungeon_level)
-            pass
-        else:
-            entities = [player]
+        entities = [player]
 
         self.tiles = self.initialize_tiles()
         self.make_map(constants['max_rooms'], constants['room_min_size'], constants['room_max_size'],
